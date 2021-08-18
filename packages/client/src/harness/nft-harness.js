@@ -59,8 +59,16 @@ export default class NftHarness extends LitElement {
           </account-widget>
           <account-widget field="recipient" label="Recipient Account">
           </account-widget>
-          <text-widget field="nftName" label="Name of NFT" placeholder="Jacob Rocks"></text-widget>
         </action-card>
+
+        <action-card title="NFT - set NFT metadata" description="Set ipfs cid to metadata" action="setMetadata"
+        method="post" fields="owner id metadata">
+        <account-widget field="owner" label="Onwer">
+        </account-widget>
+        <text-widget field="id" label="ID" placeholder="0"></text-widget>
+        <text-widget field="metadata" label="Metadata" placeholder="{...}"></text-widget>
+        </action-card>
+    
       
         <action-card title="NFT - Transfer NFT" description="Transfer an NFT from Giver --> Recipient" action="transferNFT"
           method="post" fields="giver recipient id">

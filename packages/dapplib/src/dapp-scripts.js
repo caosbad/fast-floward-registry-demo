@@ -28,13 +28,13 @@ module.exports = class DappScripts {
 		return fcl.script`
 				import RegistryNFTContract from 0x01cf0e2f2f715450
 				
-				pub fun main(acct: Address, id: UInt64): {String: String} {
+				pub fun main(acct: Address, id: UInt64): String {
 				  let acctNFTCollectionRef = getAccount(acct).getCapability(/public/NFTCollection)
 				            .borrow<&RegistryNFTContract.Collection{RegistryNFTContract.INFTCollectionPublic}>()
 				            ?? panic("Could not borrow the public capability for the recipient's account")
 				  let borrowedNFT = acctNFTCollectionRef.borrowEntireNFT(id: id)
 				    ?? panic("Could not borrow the NFT from the user's collection")
-				  let metadata: {String: String} = borrowedNFT.metadata
+				  let metadata: String = RegistryNFTContract.baseUri.concat(borrowedNFT.metadata) 
 				  return metadata
 				}
 		`;

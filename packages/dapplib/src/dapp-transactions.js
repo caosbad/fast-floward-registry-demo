@@ -133,7 +133,7 @@ module.exports = class DappTransactions {
 				// we are calling the transaction with the Tenant itself because it stores
 				// an NFTMinter resource in the Tenant resource
 				
-				transaction(recipient: Address, metadata: {String: String}) {
+				transaction(recipient: Address) {
 				    
 				    // the tenant
 				    let tenant: &RegistryNFTContract.Tenant
@@ -155,7 +155,7 @@ module.exports = class DappTransactions {
 				        let minter = self.tenant.minterRef()
 				
 				        // mint the NFT and deposit it to the recipient's collection
-				        minter.mintNFT(tenant: self.tenant, recipient: self.receiver, metadata: metadata)
+				        minter.mintNFT(tenant: self.tenant, recipient: self.receiver, metadata: "")
 				    }
 				}
 		`;
@@ -196,6 +196,62 @@ module.exports = class DappTransactions {
 		`;
 	}
 
+	static nft_set_metadata() {
+		return fcl.transaction`
+				import RegistryNFTContract from 0x01cf0e2f2f715450
+				import NonFungibleToken from 0x01cf0e2f2f715450
+				
+				// This transaction is used to transfer an NFT from acct --> recipient
+				
+				transaction(id: UInt64, metadata: String) {
+				  let ownerNFTCollectionRef: &RegistryNFTContract.Collection
+				
+				  prepare(acct: AuthAccount) {
+				      self.ownerNFTCollectionRef = acct.borrow<&RegistryNFTContract.Collection>(from: /storage/NFTCollection)
+				        ?? panic("Could not borrow the user's NFT Collection")
+				  } 
+				
+				  execute {
+				      
+				    let nft = self.ownerNFTCollectionRef.borrowEntireNFT(id: id)! as &RegistryNFTContract.NFT
+				    nft.setMetadata(metadata)
+				
+				      log("Transfered the NFT from the giver to the recipient")
+				  }
+				}
+		`;
+	}
+
+	static nft_transfer_nft() {
+		return fcl.transaction`
+				import RegistryNFTContract from 0x01cf0e2f2f715450
+				import NonFungibleToken from 0x01cf0e2f2f715450
+				
+				// This transaction is used to transfer an NFT from acct --> recipient
+				
+				transaction(id: UInt64, recipient: Address) {
+				  let giverNFTCollectionRef: &RegistryNFTContract.Collection
+				  let recipientNFTCollectionRef: &RegistryNFTContract.Collection{NonFungibleToken.CollectionPublic}
+				
+				  prepare(acct: AuthAccount) {
+				      self.giverNFTCollectionRef = acct.borrow<&RegistryNFTContract.Collection>(from: /storage/NFTCollection)
+				        ?? panic("Could not borrow the user's NFT Collection")
+				      self.recipientNFTCollectionRef = getAccount(recipient).getCapability(/public/NFTCollection)
+				          .borrow<&RegistryNFTContract.Collection{NonFungibleToken.CollectionPublic}>()
+				          ?? panic("Could not borrow the public capability for the recipient's account")
+				  } 
+				
+				  execute {
+				      let nft <- self.giverNFTCollectionRef.withdraw(withdrawID: id)
+				      
+				      self.recipientNFTCollectionRef.deposit(token: <-nft)
+				
+				      log("Transfered the NFT from the giver to the recipient")
+				  }
+				}
+		`;
+	}
+
 	static registry_nft_tenant() {
 		return fcl.transaction`
 				import RegistryNFTContract from 0x01cf0e2f2f715450
@@ -229,36 +285,6 @@ module.exports = class DappTransactions {
 				  }
 				}
 				
-		`;
-	}
-
-	static nft_transfer_nft() {
-		return fcl.transaction`
-				import RegistryNFTContract from 0x01cf0e2f2f715450
-				import NonFungibleToken from 0x01cf0e2f2f715450
-				
-				// This transaction is used to transfer an NFT from acct --> recipient
-				
-				transaction(id: UInt64, recipient: Address) {
-				  let giverNFTCollectionRef: &RegistryNFTContract.Collection
-				  let recipientNFTCollectionRef: &RegistryNFTContract.Collection{NonFungibleToken.CollectionPublic}
-				
-				  prepare(acct: AuthAccount) {
-				      self.giverNFTCollectionRef = acct.borrow<&RegistryNFTContract.Collection>(from: /storage/NFTCollection)
-				        ?? panic("Could not borrow the user's NFT Collection")
-				      self.recipientNFTCollectionRef = getAccount(recipient).getCapability(/public/NFTCollection)
-				          .borrow<&RegistryNFTContract.Collection{NonFungibleToken.CollectionPublic}>()
-				          ?? panic("Could not borrow the public capability for the recipient's account")
-				  } 
-				
-				  execute {
-				      let nft <- self.giverNFTCollectionRef.withdraw(withdrawID: id)
-				      
-				      self.recipientNFTCollectionRef.deposit(token: <-nft)
-				
-				      log("Transfered the NFT from the giver to the recipient")
-				  }
-				}
 		`;
 	}
 

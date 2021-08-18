@@ -7,6 +7,7 @@ pub contract RegistryNFTContract: NonFungibleToken, RegistryInterface {
     // Maps an address (of the customer/DappContract) to the amount
     // of tenants they have for a specific RegistryContract.
     access(contract) var clientTenants: {Address: UInt64}
+    pub var baseUri : String
 
     // ITenant
     //
@@ -104,11 +105,15 @@ pub contract RegistryNFTContract: NonFungibleToken, RegistryInterface {
     pub resource NFT: NonFungibleToken.INFT {
         pub let id: UInt64
 
-        pub var metadata: {String: String}
+        pub var metadata: String
+
+        pub fun setMetadata(_ metadata: String) {
+            self.metadata = metadata
+        }
 
         // upon creating (or "minting") this NFT Resource,
         // we must pass in a reference to a Tenant to update its totalSupply.
-        init(_tenant: &Tenant, _metadata: {String: String}) {
+        init(_tenant: &Tenant, _metadata: String) {
             // initialize NFT fields
             self.id = _tenant.totalSupply
             self.metadata = _metadata
@@ -118,6 +123,7 @@ pub contract RegistryNFTContract: NonFungibleToken, RegistryInterface {
             // update the RegistryNFTContract's totalSupply
             RegistryNFTContract.totalSupply = RegistryNFTContract.totalSupply + (1 as UInt64)
         }
+
     }
 
     // INFTCollectionPublic
@@ -225,7 +231,7 @@ pub contract RegistryNFTContract: NonFungibleToken, RegistryInterface {
         // and deposits it in the recipients collection using 
         // their collection reference
         //
-        pub fun mintNFT(tenant: &Tenant, recipient: &RegistryNFTContract.Collection{NonFungibleToken.CollectionPublic}, metadata: {String: String}) {
+        pub fun mintNFT(tenant: &Tenant, recipient: &RegistryNFTContract.Collection{NonFungibleToken.CollectionPublic}, metadata: String) {
 
             // create a new NFT
             var newNFT <- create NFT(_tenant: tenant, _metadata: metadata)
@@ -240,7 +246,7 @@ pub contract RegistryNFTContract: NonFungibleToken, RegistryInterface {
         self.totalSupply = 0
         // Initialize clientTenants
         self.clientTenants = {}
-
+        self.baseUri = "https://ipfs.io/ipfs/"
         // Set Named paths
         self.TenantStoragePath = /storage/RegistryNFTContractTenant
         self.TenantPublicPath = /public/RegistryNFTContractTenant

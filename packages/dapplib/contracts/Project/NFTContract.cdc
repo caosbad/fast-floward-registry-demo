@@ -21,9 +21,9 @@ pub contract NFTContract: NonFungibleToken {
     pub resource NFT: NonFungibleToken.INFT {
         pub let id: UInt64
 
-        pub var metadata: {String: String}
+        pub var metadata: String
 
-        init(_metadata: {String: String}) {
+        init(_metadata: String) {
             self.id = NFTContract.totalSupply
             self.metadata = _metadata
 
@@ -118,7 +118,7 @@ pub contract NFTContract: NonFungibleToken {
 
         // mintNFT mints a new NFT with a new ID
         // and deposit it in the recipients collection using their collection reference
-        pub fun mintNFT(recipient: &NFTContract.Collection{NonFungibleToken.CollectionPublic}, metadata: {String: String}) {
+        pub fun mintNFT(recipient: &NFTContract.Collection{NonFungibleToken.CollectionPublic}, metadata: String) {
 
             // create a new NFT
             var newNFT <- create NFT(_metadata: metadata)
